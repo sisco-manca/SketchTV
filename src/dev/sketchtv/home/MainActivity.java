@@ -3,28 +3,22 @@ import android.app.*;
 import android.content.*;
 import android.content.pm.*;
 import android.media.tv.*;
-import android.net.Uri;
 import android.net.*;
 import android.net.wifi.*;
 import android.os.*;
 import android.provider.Settings;
-import java.io.*;
-import java.net.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.zip.GZIPInputStream;
-import javax.net.ssl.HttpsURLConnection;
 
 public class MainActivity extends Activity {
-    private static final String[] APPS=Config.APPS;
-    private ReferenceHome home;
-    private SharedPreferences cache;
+    private HomeView home;
+    private WidgetRepository widgets;
+    private Map<String,WidgetEngine.State> widgetStates=Collections.emptyMap();
     private final Handler ui=new Handler(Looper.getMainLooper());
     private final Runnable homeOk=()->HomeButton.onHomeOk(this);
-    private final ExecutorService io=Executors.newSingleThreadExecutor();
     private final ExecutorService stateIo=Executors.newSingleThreadExecutor();
-    private boolean cacheReady=false,inputsDirty=true,inputsLoading=false,netLoading=false,netDirty=true;
+    private boolean inputsDirty=true,inputsLoading=false,netLoading=false,netDirty=true;
     private boolean receiverOn=false,networkCallbackOn=false;
     private final Map<String,String> inputNames=new HashMap<>();
     private final Map<String,List<Intent>> inputIntents=new HashMap<>();
@@ -40,77 +34,52 @@ public class MainActivity extends Activity {
         @Override public void onCapabilitiesChanged(Network n,NetworkCapabilities c){ui.post(()->requestNetwork());}
     };
     private volatile boolean visible=false,destroyed=false;
-    private boolean loading=false;
-    private long lastAttempt=0;
     private final List<TvInputInfo> inputs=new ArrayList<>();
     private TvInputInfo av,hdmi1,hdmi2;
     private final Runnable minute=new Runnable(){public void run(){if(visible){home.tick();ui.postDelayed(this,60000-System.currentTimeMillis()%60000);}}};
-    private final Runnable poll=new Runnable(){public void run(){if(visible){fetch();ui.postDelayed(this,10*60*1000L);}}};
+    private final Runnable poll=new Runnable(){public void run(){if(visible){widgets.refresh(false);ui.postDelayed(this,30000L);}}};
     private final TvInputManager.TvInputCallback inputChanged=new TvInputManager.TvInputCallback(){
         @Override public void onInputAdded(String id){loadInputs();}
         @Override public void onInputRemoved(String id){loadInputs();}
         @Override public void onInputUpdated(String id){loadInputs();}
     };
     @Override protected void onCreate(Bundle state){
-        super.onCreate(state);cache=getSharedPreferences("reference-cache-v1",0);
-        home=new ReferenceHome(this,this::open);setContentView(home);loadInputs();loadCache();ui.postDelayed(()->watchNetwork(),150);
+        super.onCreate(state);
+        home=new HomeView(this,this::open);setContentView(home);widgets=new WidgetRepository(this,BuiltinWidgets.create(),next->{widgetStates=next;home.update(next);});loadInputs();ui.postDelayed(()->watchNetwork(),150);
         TvInputManager tim=(TvInputManager)getSystemService(TV_INPUT_SERVICE);if(tim!=null)tim.registerCallback(inputChanged,ui);
     }
-    @Override protected void onResume(){super.onResume();visible=true;home.tick();if(inputsDirty)ui.postDelayed(inputRefresh,180);requestNetwork();ui.post(minute);ui.postDelayed(poll,400);overridePendingTransition(0,0);HomeButton.onHomeResumed(this);ui.postDelayed(homeOk,1500);}
-    @Override protected void onPause(){visible=false;ui.removeCallbacks(minute);ui.removeCallbacks(poll);ui.removeCallbacks(homeOk);ui.removeCallbacks(inputRefresh);ui.removeCallbacks(netRefresh);HomeButton.onHomeOk(this);super.onPause();}
-    @Override protected void onDestroy(){destroyed=true;visible=false;ui.removeCallbacksAndMessages(null);io.shutdownNow();stateIo.shutdownNow();if(receiverOn)unregisterReceiver(netReceiver);if(networkCallbackOn)((ConnectivityManager)getSystemService(CONNECTIVITY_SERVICE)).unregisterNetworkCallback(netCallback);TvInputManager tim=(TvInputManager)getSystemService(TV_INPUT_SERVICE);if(tim!=null)tim.unregisterCallback(inputChanged);home.dispose();super.onDestroy();}
+    @Override protected void onResume(){super.onResume();visible=true;widgets.setActive(true);home.tick();if(inputsDirty)ui.postDelayed(inputRefresh,180);requestNetwork();ui.post(minute);ui.postDelayed(poll,400);overridePendingTransition(0,0);HomeButton.onHomeResumed(this);ui.postDelayed(homeOk,1500);}
+    @Override protected void onPause(){visible=false;widgets.setActive(false);ui.removeCallbacks(minute);ui.removeCallbacks(poll);ui.removeCallbacks(homeOk);ui.removeCallbacks(inputRefresh);ui.removeCallbacks(netRefresh);HomeButton.onHomeOk(this);super.onPause();}
+    @Override protected void onDestroy(){destroyed=true;visible=false;ui.removeCallbacksAndMessages(null);widgets.close();stateIo.shutdownNow();if(receiverOn)unregisterReceiver(netReceiver);if(networkCallbackOn)((ConnectivityManager)getSystemService(CONNECTIVITY_SERVICE)).unregisterNetworkCallback(netCallback);TvInputManager tim=(TvInputManager)getSystemService(TV_INPUT_SERVICE);if(tim!=null)tim.unregisterCallback(inputChanged);home.dispose();super.onDestroy();}
     @Override public void onBackPressed(){ /* Stay on the home screen. */ }
     @Override public boolean onKeyUp(int key,android.view.KeyEvent event){if(key==android.view.KeyEvent.KEYCODE_MENU){settings();return true;}return super.onKeyUp(key,event);}
-    private void loadCache(){
-        stateIo.execute(()->{
-            String[][] parsed=new String[5][];long[] times=new long[5];
-            Map<String,?> saved=cache.getAll();
-            for(int i=0;i<5;i++)try{if(!Config.enabled(i))continue;Object raw=saved.get("raw"+i),stamp=saved.get("time"+i);if(raw instanceof String){parsed[i]=ReferenceData.parse(i,(String)raw);times[i]=stamp instanceof Long?(Long)stamp:0;}}catch(Exception ignored){}
-            ui.post(()->{if(destroyed)return;for(int i=0;i<5;i++)if(parsed[i]!=null&&home.fetched[i]<=times[i]){home.data[i]=parsed[i];home.fetched[i]=times[i];}cacheReady=true;home.refresh();if(visible)fetch();});
-        });
+    private void open(String action){
+        if(action.startsWith("widget:")){details(action.substring(7));return;}
+        if(action.startsWith("app:")){launch(action.substring(4));return;}
+        switch(action){
+            case "apps":startActivity(new Intent(this,AppsActivity.class).addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION));overridePendingTransition(0,0);break;
+            case "settings":openSettings(false);break;
+            case "network":openSettings(true);break;
+            case "tv":liveTv();break;
+            case "av":source(av,"AV");break;
+            case "hdmi1":source(hdmi1,"HDMI 1");break;
+            case "hdmi2":source(hdmi2,"HDMI 2");break;
+            case "sources":others();break;
+            default:message("Azione non disponibile",action);
+        }
     }
-    private void fetch(){
-        long now=System.currentTimeMillis();if(!visible||destroyed||!cacheReady||loading||now-lastAttempt<60000)return;
-        boolean due=false;for(int i=0;i<5;i++)if(Config.enabled(i)&&now-home.fetched[i]>=10*60*1000L)due=true;if(!due)return;
-        loading=true;lastAttempt=now;
-        io.execute(()->{
-            for(int i=0;i<5;i++){
-                if(!visible||destroyed)break;if(!Config.enabled(i))continue;final int index=i;
-                try{
-                    String raw=read(ReferenceData.URLS[i]);String[] parsed=ReferenceData.parse(i,raw);long time=System.currentTimeMillis();
-                    cache.edit().putString("raw"+i,raw).putLong("time"+i,time).apply();
-                    ui.post(()->{if(!destroyed){home.data[index]=parsed;home.fetched[index]=time;home.errors[index]=false;if(visible)home.refresh();}});
-                }catch(Exception e){ui.post(()->{if(!destroyed){home.errors[index]=true;if(visible)home.refresh();}});}
-            }
-            ui.post(()->loading=false);
-        });
+    private void settings(){new AlertDialog.Builder(this).setTitle("Sketch TV").setItems(new String[]{"Impostazioni TV","Aggiorna dati","Tutte le sorgenti","Home originale"},(d,n)->{if(n==0)openSettings(false);else if(n==1)widgets.refresh(true);else if(n==2)listSources(inputs,"Tutte le sorgenti");else HomeButton.openGoogleTv(this);}).setNegativeButton("Chiudi",null).show();}
+    private void details(String id){
+        WidgetEngine.State state=widgetStates.get(id);if(state==null){message("Widget","Widget non registrato");return;}
+        SimpleDateFormat date=new SimpleDateFormat("dd/MM/yyyy HH:mm",Locale.forLanguageTag(Config.LOCALE));date.setTimeZone(TimeZone.getTimeZone(Config.TIME_ZONE));
+        StringBuilder text=new StringBuilder(state.status(System.currentTimeMillis())).append("\n\n");
+        if(state.content!=null){text.append(state.content.title).append("\n");for(String line:state.content.lines)text.append(line).append("\n");}
+        text.append("\nDownload: ").append(state.fetched==0?"mai":date.format(new Date(state.fetched))).append("\nFuso orario: ").append(Config.TIME_ZONE).append("\nAggiornamento: ").append(state.provider.intervalMillis()/60000).append(" minuti con Home visibile.\n\n");
+        for(WidgetProvider.Source source:state.provider.sources())text.append(source.name).append("\n").append(source.url).append("\n").append(source.license).append("\n\n");
+        text.append("La data di download non garantisce che la fonte abbia pubblicato nuovi dati. I risultati sportivi non sono in diretta.");
+        new AlertDialog.Builder(this).setTitle(state.provider.title()).setMessage(text.toString()).setPositiveButton("Chiudi",null).setNeutralButton("Aggiorna",(d,n)->widgets.refresh(true)).show();
     }
-    private static String read(String address)throws Exception{
-        HttpsURLConnection c=(HttpsURLConnection)new URL(address).openConnection();c.setConnectTimeout(8000);c.setReadTimeout(10000);c.setInstanceFollowRedirects(false);c.setRequestProperty("Accept","application/json");c.setRequestProperty("User-Agent","SketchTV/0.1");
-        try{if(c.getResponseCode()!=200)throw new IOException("HTTP "+c.getResponseCode());InputStream stream=c.getInputStream();if("gzip".equalsIgnoreCase(c.getContentEncoding()))stream=new GZIPInputStream(stream);
-            try(InputStream in=stream;ByteArrayOutputStream out=new ByteArrayOutputStream()){byte[] b=new byte[8192];int n;while((n=in.read(b))!=-1){if(out.size()+n>524288)throw new IOException("Risposta troppo grande");out.write(b,0,n);}return new String(out.toByteArray(),java.nio.charset.StandardCharsets.UTF_8);}
-        }finally{c.disconnect();}
-    }
-    private void open(int index){
-        if(index==0){weather();return;}if(index==1){details(Config.CONSTRUCTOR_NAME,new int[]{1,2});return;}if(index==2){details(Config.TEAM_NAME,new int[]{3,4});return;}
-        if(index>=3&&index<=6){launch(APPS[index-3]);return;}
-        if(index==7){startActivity(new Intent(this,AppsActivity.class).addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION));overridePendingTransition(0,0);return;}
-        if(index==13){openSettings(false);return;}if(index==14){openSettings(true);return;}
-        if(index==8){liveTv();return;}if(index==9){source(av,"AV");return;}if(index==10){source(hdmi1,"HDMI 1");return;}if(index==11){source(hdmi2,"HDMI 2");return;}others();
-    }
-    private void settings(){new AlertDialog.Builder(this).setTitle("Sketch TV").setItems(new String[]{"Impostazioni TV","Aggiorna dati","Tutte le sorgenti","Home originale"},(d,n)->{if(n==0)startActivity(new Intent(Settings.ACTION_SETTINGS));else if(n==1){lastAttempt=0;for(int i=0;i<5;i++)home.fetched[i]=0;fetch();}else if(n==2)listSources(inputs,"Tutte le sorgenti");else HomeButton.openGoogleTv(this);}).setNegativeButton("Chiudi",null).show();}
-    private String values(int i){
-        String[] d=home.data[i];if(d==null)return "Dati non disponibili";
-        if(i==0)return Config.CITY+" · "+d[0]+"\nRilevazione: "+d[1].replace('T',' ')+"\n"+d[2];
-        if(i==1)return d[0]+"\n"+d[1]+": "+d[2]+"\n"+d[3]+": "+d[4]+"\nStagione "+d[5]+" · GP "+d[6];
-        if(i==2)return "Classifica costruttori: P"+d[0]+"\nStagione "+d[1]+" · dopo il GP "+d[2];
-        if(i==3)return d[0]+" "+d[1]+" – "+d[3]+" "+d[2]+"\nUltima partita conclusa: "+d[4];
-        return Config.TEAM_NAME+": "+d[0]+"ª posizione\nClassifica campionato configurato · stagione "+d[1];
-    }
-    private String provenance(int i){SimpleDateFormat f=new SimpleDateFormat("dd/MM/yyyy HH:mm",Locale.ITALY);f.setTimeZone(TimeZone.getTimeZone(Config.TIME_ZONE));return ReferenceData.SOURCES[i]+"\n"+ReferenceData.URLS[i]+"\nScaricato: "+(home.fetched[i]==0?"mai":f.format(new Date(home.fetched[i])))+(home.errors[i]?"\nUltimo tentativo fallito: dati salvati, se presenti.":"");}
-    private void details(String title,int[] sources){StringBuilder b=new StringBuilder();for(int i:sources)b.append(values(i)).append("\n\n").append(provenance(i)).append("\n\n");b.append("Aggiornamento ogni 10 minuti mentre la Home è visibile. Dati sportivi non in diretta. Il risultato della partita è mostrato con la squadra di casa sopra.");new AlertDialog.Builder(this).setTitle(title).setMessage(b.toString()).setPositiveButton("Chiudi",null).show();}
-    private void weather(){new AlertDialog.Builder(this).setTitle(Config.CITY+" · meteo e orario").setMessage(values(0)+"\n\n"+provenance(0)+"\n\nOrario e data: fuso configurato. Le fonti possono non essere disponibili.").setPositiveButton("Chiudi",null).setNeutralButton("Impostazioni",(d,n)->settings()).show();}
-    private void launch(String pkg){Intent i=getPackageManager().getLeanbackLaunchIntentForPackage(pkg);if(i==null)i=getPackageManager().getLaunchIntentForPackage(pkg);if(i==null){message("App non disponibile","L'app non è installata o non offre un avvio compatibile.");return;}try{startActivity(i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_NO_ANIMATION));}catch(Exception e){message("Avvio non riuscito","Apri l'app dalla Home originale.");}}
+    private void launch(String pkg){if(pkg.isEmpty()){message("Scorciatoia da configurare","Scegli il package dell’app in project.json, oppure apri Altre app.");return;}Intent i=getPackageManager().getLeanbackLaunchIntentForPackage(pkg);if(i==null)i=getPackageManager().getLaunchIntentForPackage(pkg);if(i==null){message("App non disponibile","L'app non è installata o non offre un avvio compatibile.");return;}try{startActivity(i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_NO_ANIMATION));}catch(Exception e){message("Avvio non riuscito","Apri l'app dalla Home originale.");}}
     private void liveTv(){try{startActivity(new Intent(liveIntent!=null?liveIntent:new Intent(Intent.ACTION_VIEW,TvContract.Channels.CONTENT_URI)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_NO_ANIMATION));overridePendingTransition(0,0);}catch(Exception e){message("TV in diretta","Usa il tasto TV del telecomando.");}}
     private String label(TvInputInfo in){String n=inputNames.get(in.getId());return n!=null?n:in.getId();}
     private String readLabel(TvInputInfo in){CharSequence n=in.loadCustomLabel(this);if(n==null||n.toString().trim().isEmpty())n=in.loadLabel(this);return n==null?in.getId():n.toString().trim();}
@@ -158,7 +127,7 @@ public class MainActivity extends Activity {
     private void watchNetwork(){
         if(destroyed)return;
         try{IntentFilter f=new IntentFilter();f.addAction(WifiManager.RSSI_CHANGED_ACTION);f.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION);f.addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION);if(Build.VERSION.SDK_INT>=33)registerReceiver(netReceiver,f,Context.RECEIVER_EXPORTED);else registerReceiver(netReceiver,f);receiverOn=true;}catch(Exception ignored){}
-        try{((ConnectivityManager)getSystemService(CONNECTIVITY_SERVICE)).registerDefaultNetworkCallback(netCallback);networkCallbackOn=true;}catch(Exception ignored){}
+        try{if(Build.VERSION.SDK_INT>=24)((ConnectivityManager)getSystemService(CONNECTIVITY_SERVICE)).registerDefaultNetworkCallback(netCallback);networkCallbackOn=Build.VERSION.SDK_INT>=24;}catch(Exception ignored){}
         requestNetwork();
     }
     private void requestNetwork(){if(destroyed)return;netDirty=true;ui.removeCallbacks(netRefresh);if(visible)ui.postDelayed(netRefresh,100);}
@@ -166,7 +135,7 @@ public class MainActivity extends Activity {
         if(destroyed||!visible||netLoading)return;netLoading=true;netDirty=false;
         stateIo.execute(()->{
             int level=NetworkSignal.OFFLINE;String description="Wi-Fi non connesso";
-            try{ConnectivityManager cm=(ConnectivityManager)getSystemService(CONNECTIVITY_SERVICE);Network n=cm.getActiveNetwork();NetworkCapabilities caps=n==null?null:cm.getNetworkCapabilities(n);
+            try{ConnectivityManager cm=(ConnectivityManager)getSystemService(CONNECTIVITY_SERVICE);Network n=Build.VERSION.SDK_INT>=23?cm.getActiveNetwork():null;NetworkCapabilities caps=n==null?null:cm.getNetworkCapabilities(n);
                 if(caps!=null&&caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)){level=NetworkSignal.ETHERNET;description="Connessione Ethernet";}
                 else if(caps!=null&&caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)){level=NetworkSignal.UNKNOWN;description="Wi-Fi connesso, segnale non disponibile";try{WifiManager wm=(WifiManager)getApplicationContext().getSystemService(WIFI_SERVICE);WifiInfo info=wm.getConnectionInfo();if(info!=null){int rssi=info.getRssi();level=NetworkSignal.wifiLevel(rssi);if(level>=0)description="Wi-Fi: "+level+" su 3 tacche, "+rssi+" dBm";}}catch(Exception ignored){}}
             }catch(Exception ignored){}

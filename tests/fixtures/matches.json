@@ -1,0 +1,109 @@
+{
+  "events": [
+    {
+      "date": "2040-01-02T12:00Z",
+      "season": {
+        "year": 2040
+      },
+      "competitions": [
+        {
+          "status": {
+            "type": {
+              "completed": true
+            }
+          },
+          "competitors": [
+            {
+              "id": "17",
+              "homeAway": "home",
+              "team": {
+                "shortDisplayName": "Example A"
+              },
+              "score": {
+                "displayValue": "2"
+              }
+            },
+            {
+              "id": "18",
+              "homeAway": "away",
+              "team": {
+                "shortDisplayName": "Example B"
+              },
+              "score": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "date": "2040-01-03T12:00Z",
+      "season": {
+        "year": 2040
+      },
+      "competitions": [
+        {
+          "status": {
+            "type": {
+              "completed": false
+            }
+          },
+          "competitors": [
+            {
+              "id": "17",
+              "homeAway": "home",
+              "team": {
+                "shortDisplayName": "Example A"
+              },
+              "score": {
+                "displayValue": "0"
+              }
+            },
+            {
+              "id": "18",
+              "homeAway": "away",
+              "team": {
+                "shortDisplayName": "Example B"
+              },
+              "score": "1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "date": "2040-01-01T12:00Z",
+      "season": {
+        "year": 2040
+      },
+      "competitions": [
+        {
+          "status": {
+            "type": {
+              "completed": true
+            }
+          },
+          "competitors": [
+            {
+              "id": "17",
+              "homeAway": "home",
+              "team": {
+                "shortDisplayName": "Example A"
+              },
+              "score": {
+                "displayValue": "0"
+              }
+            },
+            {
+              "id": "18",
+              "homeAway": "away",
+              "team": {
+                "shortDisplayName": "Example B"
+              },
+              "score": "1"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

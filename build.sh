@@ -2,7 +2,7 @@
 # Builds out/tvhome.apk. Needs Java 17 and the Android SDK (platform 34, build-tools 34).
 #   macOS:  brew install openjdk@17 && brew install --cask android-commandlinetools
 #           sdkmanager "platforms;android-34" "build-tools;34.0.0"
-# Customize src/dev/sketchtv/home/Config.java before building.
+# Customize project.json before building. Optional: PROJECT=path/to/project.json sh build.sh
 set -e
 cd "$(dirname "$0")"
 
@@ -13,7 +13,9 @@ SDK=${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}
 BT=$SDK/build-tools/34.0.0; JAR=$SDK/platforms/android-34/android.jar
 [ -f "$JAR" ] && [ -d "$BT" ] || { echo "Android SDK not found. Set ANDROID_HOME, and install platforms;android-34 and build-tools;34.0.0." >&2; exit 1; }
 
+python3 tools/configure.py "${PROJECT:-project.json}" --check
 rm -rf out; mkdir -p out/classes out/dex out/gen/dev/sketchtv/home
+python3 tools/configure.py "${PROJECT:-project.json}"
 
 "$BT/aapt2" compile --dir res -o out/res.zip
 "$BT/aapt2" link -o out/base.apk -I "$JAR" --manifest AndroidManifest.xml --min-sdk-version 21 --target-sdk-version 34 -A assets out/res.zip

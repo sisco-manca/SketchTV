@@ -8,6 +8,6 @@
 
 Gli endpoint ESPN usati non costituiscono un contratto pubblico stabile. Non è concessa qui una licenza per redistribuire i dati: verificarne condizioni e disponibilità per il proprio impiego. Anche per Jolpica controllare condizioni e limiti del servizio. Non confondere la licenza del codice del provider con quella dei dati.
 
-Seleziona un widget per aprire provenienza e dettagli. La pagina README non sostituisce l'attribuzione nel prodotto: ogni nuovo adattatore deve mostrare almeno provider, URL, timestamp e stato degli errori. Il timestamp è quello del download, non una garanzia che il provider abbia già pubblicato il risultato più recente. La UI indica dati salvati dopo errori o se vecchi di oltre un'ora.
+Seleziona un widget per aprire provenienza e dettagli. La pagina README non sostituisce l'attribuzione nel prodotto: ogni nuovo adattatore deve mostrare almeno provider, URL, timestamp e stato degli errori. Il timestamp è quello del download, non una garanzia che il provider abbia già pubblicato il risultato più recente. La UI indica dati salvati dopo errori o se vecchi di oltre il maggiore fra un'ora e due intervalli di aggiornamento.
 
 Clock e data provengono dall'orologio di sistema nel fuso configurato. Le tacche Wi-Fi provengono dalle API Android, possono risultare sconosciute se il firmware limita i dati. Non si avviano scansioni.

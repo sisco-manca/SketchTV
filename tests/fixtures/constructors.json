@@ -1,0 +1,20 @@
+{
+  "MRData": {
+    "StandingsTable": {
+      "StandingsLists": [
+        {
+          "season": "2040",
+          "round": "1",
+          "ConstructorStandings": [
+            {
+              "position": "3",
+              "Constructor": {
+                "constructorId": "example"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

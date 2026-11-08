@@ -3,15 +3,7 @@ import org.json.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-final class ReferenceData {
-    static final String[] URLS={
-        "https://api.open-meteo.com/v1/forecast?latitude="+Config.LATITUDE+"&longitude="+Config.LONGITUDE+"&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&forecast_days=1&timezone=auto",
-        "https://api.jolpi.ca/ergast/f1/current/last/constructors/"+Config.CONSTRUCTOR_ID+"/results.json",
-        "https://api.jolpi.ca/ergast/f1/current/constructorStandings.json",
-        "https://site.api.espn.com/apis/site/v2/sports/soccer/"+Config.LEAGUE_ID+"/teams/"+Config.TEAM_ID+"/schedule",
-        "https://site.api.espn.com/apis/v2/sports/soccer/"+Config.LEAGUE_ID+"/standings"
-    };
-    static final String[] SOURCES={"Open-Meteo · CC BY 4.0","Jolpica F1 · ultimo GP pubblicato","Jolpica F1 · classifica costruttori","ESPN · ultima partita di campionato configurato conclusa","ESPN · classifica campionato configurato"};
+final class BuiltinParsers {
     static String date(String raw)throws Exception {
         SimpleDateFormat f=new SimpleDateFormat("yyyy-MM-dd",Locale.US);f.setLenient(false);f.setTimeZone(TimeZone.getTimeZone("UTC"));
         SimpleDateFormat out=new SimpleDateFormat("dd/MM/yyyy",Locale.ITALY);out.setTimeZone(TimeZone.getTimeZone("UTC"));return out.format(f.parse(raw.substring(0,10)));

@@ -11,10 +11,27 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - uses: android-actions/setup-android@v3
       - run: sdkmanager "platforms;android-34" "build-tools;34.0.0"
+      - run: python3 tests/test_config.py
       - run: python3 tests/check_layout.py
       - run: python3 tests/check_privacy.py
       - run: sh tests/test_network.sh
+      - run: sh tests/test_widgets.sh
+      - name: Get JVM test-only JSON dependency
+        run: |
+          curl -fsSL https://repo.maven.apache.org/maven2/org/json/json/20240303/json-20240303.jar -o "$RUNNER_TEMP/json.jar"
+          echo "3cf6cd6892e32e2b4c1c39e0f52f5248a2f5b37646fdfbb79a66b46b618414ed  $RUNNER_TEMP/json.jar" | sha256sum --check
+      - run: sh tests/test_parsers.sh
+        env:
+          JSON_JAR: ${{ runner.temp }}/json.jar
+      - name: Browser test dependencies
+        run: |
+          python3 -m pip install playwright==1.56.0
+          python3 -m playwright install --with-deps chromium
+      - run: python3 tests/test_preview.py
       - run: sh build.sh
       - run: '"$ANDROID_HOME/build-tools/34.0.0/apksigner" verify out/tvhome.apk'

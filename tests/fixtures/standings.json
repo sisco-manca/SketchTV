@@ -1,0 +1,39 @@
+{
+  "season": {
+    "year": 2040
+  },
+  "children": [
+    {
+      "standings": {
+        "entries": [
+          {
+            "team": {
+              "id": "18"
+            },
+            "stats": [
+              {
+                "name": "rank",
+                "displayValue": "1"
+              }
+            ]
+          },
+          {
+            "team": {
+              "id": "17"
+            },
+            "stats": [
+              {
+                "name": "points",
+                "displayValue": "30"
+              },
+              {
+                "name": "rank",
+                "displayValue": "8"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

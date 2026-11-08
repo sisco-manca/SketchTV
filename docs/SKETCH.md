@@ -1,11 +1,13 @@
-# Dal disegno al layout
+# Dal disegno alla Home
 
-Usa una tavola 1920×1080 e lascia un margine sicuro attorno ai contenuti. `ReferenceHome.BOXES` definisce i rettangoli come sinistra, alto, destra, basso; il disegno è ridimensionato uniformemente e centrato sul display. Non cambiare l'ordine degli indici senza aggiornare anche `MainActivity.open` e le etichette di accessibilità.
+1. Prepara uno sketch 16:9 con margini, riquadri ed etichette. Può essere un wireframe o un'immagine di riferimento.
+2. Avvia `python3 tools/preview.py` e apri l'indirizzo locale indicato.
+3. Carica lo sketch nella sezione «Sovrapponi il tuo sketch». L'immagine resta nel browser: non viene inviata al server o salvata nel progetto.
+4. Seleziona un riquadro con le frecce o un clic, modifica etichetta/X/Y/larghezza/altezza e premi «Applica al progetto». Il clic simula anche l'azione, con una finestra esplicativa. Per aggiungere/rimuovere riquadri, cambiare colori, app o provider modifica il JSON.
+5. Correggi gli errori indicati: il validatore blocca l'esportazione se ci sono sovrapposizioni, margini insufficienti, azioni sconosciute o widget configurati in modo incompleto. L'ultima anteprima valida resta visibile.
+6. Esporta il JSON e sostituisci `project.json` nel checkout, oppure indica quel file con `PROJECT=... sh build.sh`.
+7. Verifica la Home su un dispositivo di prova. Geometria e focus derivano dallo stesso file, ma rasterizzazione dei font, metriche native e prestazioni Android non sono riprodotti esattamente dal browser.
 
-Indici: 0 orologio/meteo, 1 F1, 2 calcio, 3–6 app, 7 catalogo, 8 TV, 9 AV, 10–11 HDMI, 12 altre sorgenti, 13 impostazioni, 14 rete. Aggiorna sia le coordinate dei bersagli sia le coordinate del disegno Canvas quando sposti un elemento. Verifica che il bordo di focus non venga tagliato.
+Le immagini opzionali vanno in `assets/` e nel campo `asset` del riquadro. Servile nello studio con nomi PNG semplici, senza percorsi. Il renderer mantiene le proporzioni; un'immagine mancante mostra l'etichetta. Limita dimensioni e peso e usa soltanto asset di cui possiedi i diritti necessari.
 
-Per modificare il tema cambia shader/colori e gerarchie tipografiche in ReferenceHome. Font locali, niente download al rendering. I nomi asset opzionali sono netflix.png, prime.png, youtube.png e spotify.png per compatibilità con il renderer: sostituiscili o rinominali nel codice quando scegli altre app. Nessun logo di terzi è incluso. Mantieni le immagini proporzionate e leggere.
-
-I provider attuali sono adattatori specifici: ReferenceData contiene URL e parser, MainActivity cache e finestre dettagli, ReferenceHome rappresentazione. Un nuovo tipo di widget richiede modificare tutti e tre, documentare fonte/licenza, trattare dati assenti e aggiungere verifiche del parser. Non inserire credenziali nell'APK o nel repository.
-
-Config.java: inserisci coordinate numeriche e nome di una località, fuso IANA, ID costruttore Jolpica, ID squadra e campionato ESPN; abilita soltanto gli adattatori configurati. I campi sono stringhe Java, non un editor con validazione: usa identificativi validi dei provider. Per ripartire senza cache disinstalla solo la propria build di prova o cancella i suoi dati dalle impostazioni, dopo aver valutato cosa si perde.
+Lo studio non è ancora un editor drag-and-drop o un sistema di riconoscimento dello sketch. Serve a confrontare proporzioni e rendere verificabile il passaggio fra disegno e APK.

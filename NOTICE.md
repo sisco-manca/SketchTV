@@ -1,6 +1,6 @@
 # Attribuzioni
 
-Il codice deriva da Ansub/tv-detox (Ansub Khan, 2026), licenza MIT: https://github.com/Ansub/tv-detox . Il file LICENSE originale è conservato. Sketch TV aggiunge layout a schermata unica, widget con provenienza, configurazione neutra, catalogo app e ottimizzazioni della ripresa.
+Il codice deriva da Ansub/tv-detox (Ansub Khan, 2026), licenza MIT: https://github.com/Ansub/tv-detox . Il file LICENSE originale è conservato. Sketch TV aggiunge layout a schermata unica, widget con provenienza, configurazione neutra, catalogo app, ottimizzazioni della ripresa, layout generato da progetto JSON, provider modulari e studio locale.
 
 Poppins Regular e Bold: Google Fonts / autori Poppins. Licenza SIL Open Font License 1.1 in assets/OFL-Poppins.txt. https://fonts.google.com/specimen/Poppins
 

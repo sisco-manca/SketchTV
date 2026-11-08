@@ -1,0 +1,229 @@
+{
+  "version": 1,
+  "canvas": {
+    "width": 1920,
+    "height": 1080,
+    "safeMargin": 24
+  },
+  "theme": {
+    "background": "#101114",
+    "backgroundEnd": "#292b33",
+    "text": "#ffffff",
+    "muted": "#c5c9d3",
+    "card": "#f5f6fa",
+    "cardText": "#17191e",
+    "accent": "#8fcbff",
+    "radius": 24,
+    "textScale": 1.0
+  },
+  "clock": {
+    "timeZone": "UTC",
+    "locale": "it-IT"
+  },
+  "widgets": {
+    "weather": {
+      "enabled": false,
+      "city": "Località",
+      "latitude": 0,
+      "longitude": 0,
+      "refreshMinutes": 15
+    },
+    "f1": {
+      "enabled": false,
+      "constructorId": "",
+      "name": "Formula 1",
+      "refreshMinutes": 30
+    },
+    "football": {
+      "enabled": false,
+      "teamId": "",
+      "leagueId": "",
+      "name": "Calcio",
+      "refreshMinutes": 30
+    }
+  },
+  "tiles": [
+    {
+      "id": "clock",
+      "kind": "clock",
+      "label": "Ora e meteo",
+      "action": "widget:weather",
+      "rect": [
+        108,
+        155,
+        682,
+        440
+      ]
+    },
+    {
+      "id": "motorsport",
+      "kind": "widget",
+      "label": "Formula 1",
+      "action": "widget:f1",
+      "rect": [
+        886,
+        174,
+        432,
+        384
+      ],
+      "color": "#b52640"
+    },
+    {
+      "id": "football",
+      "kind": "widget",
+      "label": "Calcio",
+      "action": "widget:football",
+      "rect": [
+        1380,
+        174,
+        432,
+        384
+      ],
+      "color": "#ba5121"
+    },
+    {
+      "id": "app1",
+      "kind": "app",
+      "label": "App 1",
+      "action": "app:",
+      "rect": [
+        108,
+        617,
+        347,
+        204
+      ]
+    },
+    {
+      "id": "app2",
+      "kind": "app",
+      "label": "App 2",
+      "action": "app:",
+      "rect": [
+        478,
+        617,
+        347,
+        204
+      ]
+    },
+    {
+      "id": "app3",
+      "kind": "app",
+      "label": "App 3",
+      "action": "app:",
+      "rect": [
+        848,
+        617,
+        347,
+        204
+      ]
+    },
+    {
+      "id": "app4",
+      "kind": "app",
+      "label": "App 4",
+      "action": "app:",
+      "rect": [
+        1218,
+        617,
+        347,
+        204
+      ]
+    },
+    {
+      "id": "apps",
+      "kind": "app",
+      "label": "Altre app",
+      "action": "apps",
+      "rect": [
+        1588,
+        617,
+        224,
+        204
+      ]
+    },
+    {
+      "id": "tv",
+      "kind": "source",
+      "label": "TV",
+      "action": "tv",
+      "rect": [
+        108,
+        869,
+        323,
+        104
+      ]
+    },
+    {
+      "id": "av",
+      "kind": "source",
+      "label": "AV",
+      "action": "av",
+      "rect": [
+        454,
+        869,
+        323,
+        104
+      ]
+    },
+    {
+      "id": "hdmi1",
+      "kind": "source",
+      "label": "HDMI 1",
+      "action": "hdmi1",
+      "rect": [
+        800,
+        869,
+        323,
+        104
+      ]
+    },
+    {
+      "id": "hdmi2",
+      "kind": "source",
+      "label": "HDMI 2",
+      "action": "hdmi2",
+      "rect": [
+        1146,
+        869,
+        323,
+        104
+      ]
+    },
+    {
+      "id": "sources",
+      "kind": "source",
+      "label": "Altre sorgenti",
+      "action": "sources",
+      "rect": [
+        1492,
+        869,
+        320,
+        104
+      ]
+    },
+    {
+      "id": "settings",
+      "kind": "control",
+      "label": "Impostazioni",
+      "action": "settings",
+      "rect": [
+        1341,
+        28,
+        224,
+        108
+      ]
+    },
+    {
+      "id": "network",
+      "kind": "control",
+      "label": "Rete",
+      "action": "network",
+      "rect": [
+        1588,
+        28,
+        224,
+        108
+      ]
+    }
+  ]
+}

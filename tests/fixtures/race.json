@@ -1,0 +1,38 @@
+{
+  "MRData": {
+    "RaceTable": {
+      "season": "2040",
+      "Races": [
+        {
+          "date": "2040-01-02",
+          "raceName": "Example GP",
+          "round": "1",
+          "Results": [
+            {
+              "Constructor": {
+                "constructorId": "example"
+              },
+              "Driver": {
+                "familyName": "Driver B"
+              },
+              "position": "5",
+              "positionText": "5",
+              "status": "Finished"
+            },
+            {
+              "Constructor": {
+                "constructorId": "example"
+              },
+              "Driver": {
+                "familyName": "Driver A"
+              },
+              "position": "2",
+              "positionText": "2",
+              "status": "Finished"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

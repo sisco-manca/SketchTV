@@ -2,33 +2,63 @@
 
 **Dal tuo sketch a una Home Android TV personale, semplice da navigare.**
 
-Una base Android nativa per trasformare un disegno, wireframe o riferimento grafico in una Home a schermo unico, utilizzabile con il telecomando. L'obiettivo è rendere rapida la personalizzazione e piacevole la navigazione, con widget scelti da chi realizza l'interfaccia e fonti sempre dichiarate.
+Sketch TV è una base Android nativa con uno studio locale: confronta il tuo disegno con l'anteprima, modifica i riquadri, prova il telecomando ed esporta un progetto pronto per la compilazione.
 
-## Cosa funziona oggi
+## Prova lo studio
 
-- Layout nativo Canvas, Poppins, bersagli di focus e clic Android, senza WebView.
-- Quattro scorciatoie configurabili e «Altre app», aggiornato quando si installano o rimuovono applicazioni visibili al launcher.
-- Impostazioni TV, rete e indicatore dinamico Wi-Fi/Ethernet; nessuna scansione Wi-Fi.
-- Sorgenti tramite il framework Android TV, con fallback al telecomando quando il firmware non espone un ingresso.
-- Adattatori per meteo Open-Meteo, Formula 1 Jolpica ed eventi/classifiche calcistiche ESPN: cache locale, richieste fuori dal thread grafico, aggiornamento ogni dieci minuti quando la Home è visibile.
-- Nome della fonte, URL e data di download nei dettagli dei widget; errori e dati salvati segnalati. Dati sportivi non in diretta.
-- Servizio Accessibilità facoltativo per alcuni launcher Google; non disabilita la Home originale.
+Servono Python 3.9+ e un browser moderno. Non serve collegare un televisore.
 
-La build iniziale è **neutra**: nessuna località, squadra o app preferita impostata; i widget di rete sono disabilitati finché non li configuri. Non contiene configurazioni o dati di un televisore personale.
+```sh
+python3 tools/preview.py
+```
 
-## Dallo sketch alla TV
+Apri **http://127.0.0.1:8765**. Puoi:
 
-1. Disegna una schermata 16:9, indicando riquadri, spazi, focus del telecomando e azione di ogni elemento.
-2. Segui [la guida allo sketch](docs/SKETCH.md) per riportare il disegno nelle coordinate del layout e collegare le azioni.
-3. Modifica `src/dev/sketchtv/home/Config.java`: app, etichette, fuso orario, località e identificativi dei provider. Mantieni quattro package e quattro etichette, nello stesso ordine.
-4. Aggiungi eventuali immagini di cui hai diritto d'uso in `assets/`. I loghi non sono necessari: senza immagini compaiono le etichette.
-5. Compila, installa con conferma e verifica su un dispositivo di prova secondo [installazione e ripristino](docs/INSTALL.md).
+- sovrapporre uno sketch, conservato nel browser, e regolarne l'opacità;
+- selezionare un riquadro e cambiare etichetta, posizione e dimensioni;
+- modificare tema, azioni e widget nel JSON;
+- provare frecce, OK e percorsi di focus;
+- importare/esportare `project.json`, dopo la validazione.
 
-**Non è ancora un convertitore automatico immagine → APK né un editor visuale.** La trasformazione dello sketch richiede interventi sul codice; un assistente di sviluppo può aiutare. La scelta dei widget avviene oggi modificando il codice, non da un catalogo nella TV.
+Sostituisci il `project.json` del progetto con quello esportato. Il browser non scrive automaticamente i tuoi file. Lo studio usa dati dimostrativi indicati come tali; non apre app, non contatta provider e non misura prestazioni Android.
+
+## Un progetto, una geometria
+
+`project.json` definisce **riquadri, azioni, colori, dimensione del testo, orologio e widget**. Il validatore genera le classi Java in fase di build. Lo stesso rettangolo guida disegno e bersaglio cliccabile; i collegamenti di focus sono generati dalla posizione dei riquadri. Nessuna coordinata duplicata da mantenere a mano.
+
+La configurazione iniziale è neutra: nessuna località, squadra o app preferita; widget remoti disabilitati. Non sono inclusi log, backup, dati o asset di un televisore personale.
+
+[Configurazione e personalizzazione](docs/CONFIGURATION.md) · [Dal disegno alla Home](docs/SKETCH.md)
+
+## Widget con provenienza
+
+Ogni provider dichiara fonti HTTPS, attribuzione, intervallo di aggiornamento e parser. Un motore comune gestisce cache, aggiornamenti, errori e tentativi successivi. Aggiungere un provider non richiede cambiare renderer o Activity.
+
+Adattatori inclusi:
+
+| Widget | Fonte | Configurazione richiesta |
+| --- | --- | --- |
+| Meteo | Open-Meteo, CC BY 4.0 | Nome località, coordinate |
+| Formula 1 | Jolpica F1 | Identificativo costruttore |
+| Calcio | ESPN | Identificativi squadra e campionato |
+
+Ogni riquadro mostra la fonte; i dettagli mostrano endpoint, condizioni dichiarate, data di download e stato dei dati. Gli errori conservano gli ultimi dati validi, segnalati come salvati. Risultati e classifica F1 di gare diverse o dati calcistici di stagioni diverse non vengono combinati. Non sono risultati in diretta.
+
+[Fonti e limiti](docs/SOURCES.md) · [Aggiungere widget](docs/WIDGETS.md)
+
+## Navigazione Android
+
+- Home nativa Canvas, Poppins, focus e clic gestiti da Android, senza WebView.
+- Numero e ordine delle scorciatoie definiti nel progetto; «Altre app» si aggiorna con installazioni/rimozioni visibili al launcher.
+- Impostazioni, rete e indicatore Wi-Fi/Ethernet senza scansioni.
+- Sorgenti tramite il framework TV, con spiegazione e fallback al telecomando se un ingresso non è esposto.
+- Servizio Accessibilità facoltativo per alcuni launcher Google, senza disabilitare la Home originale.
+
+Nessuna conversione automatica immagine → interfaccia: lo sketch è un riferimento sovrapponibile e il layout si definisce nello studio. I tipi di widget disponibili si configurano nel JSON; nuovi tipi richiedono un adattatore in codice.
 
 ## Compilazione
 
-Servono JDK 17 e Android SDK con `platforms;android-34` e `build-tools;34.0.0`.
+Servono Python 3.9+, JDK 17 e Android SDK con `platforms;android-34` e `build-tools;34.0.0`.
 
 ```sh
 export JAVA_HOME="/percorso/jdk17"
@@ -36,28 +66,30 @@ export ANDROID_HOME="/percorso/android-sdk"
 sh build.sh
 ```
 
-APK: `out/tvhome.apk`. Al primo build viene generata una chiave locale `key.jks`: conservarla per aggiornare la propria installazione, senza pubblicarla. Per una distribuzione usa una chiave dedicata e `KEYSTORE` / `KEYSTORE_PASS`. La password predefinita di sviluppo non è adatta a una chiave di produzione.
+In alternativa: `PROJECT=altro-progetto.json sh build.sh`. La configurazione viene validata prima di sostituire l'output della build. APK: `out/tvhome.apk`.
+
+La prima build genera `key.jks`: conservala privatamente per i tuoi aggiornamenti. Per distribuire una build usa una chiave dedicata e `KEYSTORE` / `KEYSTORE_PASS`; la password predefinita di sviluppo non è adatta a una chiave di produzione. Nessuna chiave o APK è incluso in Git.
+
+[Installazione e ripristino](docs/INSTALL.md) · [Privacy](docs/PRIVACY.md)
+
+## Qualità e fluidità
+
+Rendering conservato, bitmap limitati, rete/cache/ingressi fuori dal thread grafico e nessuna ricostruzione della schermata al ritorno dalle app. Gli aggiornamenti dei widget avvengono soltanto con Home visibile e rispettano intervalli indipendenti.
+
+La fluidità è un obiettivo da misurare. Non promettiamo maggiore RAM libera né compatibilità universale: avvio, sorgenti e Home dipendono anche dal firmware. L'anteprima browser non sostituisce un collaudo Android.
 
 ```sh
+python3 tests/test_config.py
 python3 tests/check_layout.py
+python3 tests/check_privacy.py
 sh tests/test_network.sh
+sh tests/test_widgets.sh
 ```
 
-## Fluidità e funzionalità
+[Test dei parser, browser e checklist dispositivo](docs/VALIDATION.md). La CI compila e verifica la firma, la configurazione, cache/errori, parser con dati inventati e lo studio nel browser.
 
-Il codice conserva la UI, limita i bitmap, carica soltanto le icone della pagina corrente e sposta rete/cache/enumerazione ingressi fuori dal thread grafico. Questo riduce lavoro inutile; non dimostra da solo un aumento di velocità o RAM libera. Misurare ripresa Home, fotogrammi lenti e memoria sul dispositivo di destinazione. L'esperienza del progetto di origine non è una certificazione di questa build generalizzata.
+## Origine e licenze
 
-La «perfetta funzionalità» è un criterio di qualità da verificare: firmware, ingresso AV/HDMI, permessi, sorgenti dati e pulsante Home possono comportarsi diversamente. Non c'è garanzia universale. Vedi [la checklist di verifica](docs/VALIDATION.md).
+Derivato da [Ansub/tv-detox](https://github.com/Ansub/tv-detox), commit `b22a1e368ee56d670d11115d8408e9025488240b`, con licenza MIT conservata. Poppins è incluso con licenza SIL OFL. [Attribuzioni](NOTICE.md). Marchi e dati dei provider restano dei rispettivi titolari.
 
-## Fonti, privacy e licenze
-
-[Fonti dei widget e loro limiti](docs/SOURCES.md) · [Privacy](docs/PRIVACY.md) · [Attribuzioni](NOTICE.md).
-
-Derivato da [Ansub/tv-detox](https://github.com/Ansub/tv-detox), commit `b22a1e368ee56d670d11115d8408e9025488240b`, con licenza MIT conservata. Poppins è incluso con licenza SIL OFL. Marchi e contenuti dei provider restano dei rispettivi titolari.
-
-## Sviluppi successivi
-
-- Editor di layout e importazione assistita degli sketch.
-- Catalogo di widget con contratti per fonti, cache, errori e aggiornamenti.
-- Configurazione da interfaccia e anteprima con navigazione telecomando.
-- Matrice di compatibilità e benchmark ripetibili su più firmware.
+Prossimi sviluppi: trascinamento e ridimensionamento visuale dei riquadri, catalogo estensibile da interfaccia e benchmark su diversi firmware.
