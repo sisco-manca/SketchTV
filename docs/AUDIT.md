@@ -6,7 +6,7 @@ Analisi di sorgenti Android, generazione/configurazione, anteprima, build/CI, te
 
 | Priorità | Riscontro | Intervento e verifica |
 | --- | --- | --- |
-| Alta | CI ferma in setup-android: richiesta del pacchetto SDK obsoleto `tools` | Installazione esplicita di platform-tools; test e build su GitHub Actions |
+| Alta | CI ferma in setup-android: richiesta del pacchetto SDK obsoleto `tools` | Installazione esplicita di platform-tools e runner Ubuntu 24.04 stabile (Playwright fissato non supporta il più recente ubuntu-latest); test e build su GitHub Actions |
 | Alta | Qualunque file in assets poteva finire nell'APK | Staging di font/licenza e sole immagini referenziate, limiti dimensionali e test di esclusione |
 | Media | Controlli widget ogni 30 secondi, anche con scadenze molto più lunghe | Scheduler alla scadenza più vicina, nessun timer per provider disabilitati, test delle scadenze e retry |
 | Media | Bitmap lette durante costruzione della Home | Worker locale e budget decodificato totale 4 MiB, fallback a etichette |
