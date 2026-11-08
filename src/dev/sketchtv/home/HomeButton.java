@@ -75,7 +75,8 @@ public class HomeButton extends AccessibilityService {
 
     // During the TV's first setup, Home is left alone.
     private boolean setupDone() {
-        return Settings.Secure.getInt(getContentResolver(), "user_setup_complete", 1) == 1;
+        return Settings.Global.getInt(getContentResolver(), "device_provisioned", 0) == 1
+                && Settings.Secure.getInt(getContentResolver(), "user_setup_complete", 0) == 1;
     }
 
     private static SharedPreferences prefs(Context c) {

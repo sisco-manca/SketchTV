@@ -13,6 +13,6 @@ config['widgets']['football']['teamId']='17'
 config['widgets']['football']['leagueId']='example.1'
 Path(sys.argv[1]).write_text(json.dumps(config))
 PY
-python3 tools/configure.py "$TEST_DIR/project.json" --output "$TEST_DIR/gen"
+python3 tools/configure.py "$TEST_DIR/project.json" --output "$TEST_DIR/gen" --assets-output "$TEST_DIR/assets"
 javac -cp "$JSON_JAR" -d "$TEST_DIR/classes" "$TEST_DIR/gen/Config.java" src/dev/sketchtv/home/BuiltinParsers.java src/dev/sketchtv/home/WidgetProvider.java src/dev/sketchtv/home/BuiltinWidgets.java tests/WidgetParsersTest.java
 java -cp "$TEST_DIR/classes:$JSON_JAR" dev.sketchtv.home.WidgetParsersTest

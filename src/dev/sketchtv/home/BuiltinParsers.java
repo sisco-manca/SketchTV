@@ -10,7 +10,7 @@ final class BuiltinParsers {
     }
     static String[] parse(int type,String raw)throws Exception {
         JSONObject j=new JSONObject(raw);
-        if(type==0){JSONObject c=j.getJSONObject("current"),d=j.getJSONObject("daily");return new String[]{Math.round(c.getDouble("temperature_2m"))+"°",c.getString("time"),"Min "+Math.round(d.getJSONArray("temperature_2m_min").getDouble(0))+"° · Max "+Math.round(d.getJSONArray("temperature_2m_max").getDouble(0))+"° · Prob. pioggia "+d.getJSONArray("precipitation_probability_max").getInt(0)+"%"};}
+        if(type==0){JSONObject c=j.getJSONObject("current"),d=j.getJSONObject("daily");double current=c.getDouble("temperature_2m"),min=d.getJSONArray("temperature_2m_min").getDouble(0),max=d.getJSONArray("temperature_2m_max").getDouble(0);int rain=d.getJSONArray("precipitation_probability_max").getInt(0);if(!temperature(current)||!temperature(min)||!temperature(max)||min>max||rain<0||rain>100)throw new Exception("Valori meteo non validi");String time=c.getString("time");date(time);if(!time.matches("[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}.*"))throw new Exception("Data meteo assente");return new String[]{Math.round(current)+"°",time,"Min "+Math.round(min)+"° · Max "+Math.round(max)+"° · Prob. pioggia "+rain+"%"};}
         if(type==1){
             JSONObject table=j.getJSONObject("MRData").getJSONObject("RaceTable");JSONArray races=table.getJSONArray("Races");
             if(races.length()==0)throw new Exception("Nessun GP");JSONObject race=races.getJSONObject(races.length()-1);
@@ -45,6 +45,7 @@ final class BuiltinParsers {
         else if(v instanceof JSONArray){JSONArray a=(JSONArray)v;for(int i=0;i<a.length();i++){JSONObject found=findTeam(a.get(i),depth+1);if(found!=null)return found;}}
         return null;
     }
+    private static boolean temperature(double value){return !Double.isNaN(value)&&!Double.isInfinite(value)&&value>=-100&&value<=70;}
     private static String position(JSONObject r)throws Exception {String p=r.getString("positionText");return p.matches("[0-9]+")?"P"+positive(p):r.getString("status");}
     private static String positive(String s)throws Exception {if(!s.matches("[0-9]{1,2}")||Integer.parseInt(s)<1)throw new Exception("Posizione non valida");return s;}
     private static String score(JSONObject t)throws Exception {Object s=t.get("score");String v=s instanceof JSONObject?((JSONObject)s).getString("displayValue"):String.valueOf(s);if(!v.matches("[0-9]{1,2}"))throw new Exception("Punteggio non valido");return v;}

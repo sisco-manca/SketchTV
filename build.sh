@@ -18,7 +18,7 @@ rm -rf out; mkdir -p out/classes out/dex out/gen/dev/sketchtv/home
 python3 tools/configure.py "${PROJECT:-project.json}"
 
 "$BT/aapt2" compile --dir res -o out/res.zip
-"$BT/aapt2" link -o out/base.apk -I "$JAR" --manifest AndroidManifest.xml --min-sdk-version 21 --target-sdk-version 34 -A assets out/res.zip
+"$BT/aapt2" link -o out/base.apk -I "$JAR" --manifest AndroidManifest.xml --min-sdk-version 21 --target-sdk-version 34 -A out/assets out/res.zip
 # shellcheck disable=SC2046 # javac and d8 want one argument per file, so the list is split on purpose
 javac -nowarn -Xlint:-options -encoding UTF-8 -source 1.8 -target 1.8 -bootclasspath "$JAR:$BT/core-lambda-stubs.jar" \
   -d out/classes $(find src out/gen -name "*.java")
@@ -29,8 +29,8 @@ cp out/base.apk out/unsigned.apk; (cd out/dex && zip -q ../unsigned.apk classes.
 
 # A signing key is made on first build. Keep key.jks: updates must be signed with the same key.
 # (Releases are signed with their own key: set KEYSTORE and KEYSTORE_PASS.)
-KS=${KEYSTORE:-key.jks}; PASS=${KEYSTORE_PASS:-tvhome123}
-[ -f "$KS" ] || keytool -genkeypair -keystore "$KS" -storepass "$PASS" -keypass "$PASS" -alias tvhome \
+KS=${KEYSTORE:-key.jks}; SKETCHTV_SIGNING_PASS=${KEYSTORE_PASS:-tvhome123}; export SKETCHTV_SIGNING_PASS
+[ -f "$KS" ] || keytool -genkeypair -keystore "$KS" -storepass:env SKETCHTV_SIGNING_PASS -keypass:env SKETCHTV_SIGNING_PASS -alias tvhome \
   -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=tvhome" >/dev/null 2>&1
-"$BT/apksigner" sign --ks "$KS" --ks-pass "pass:$PASS" --out out/tvhome.apk out/aligned.apk
+"$BT/apksigner" sign --ks "$KS" --ks-pass env:SKETCHTV_SIGNING_PASS --out out/tvhome.apk out/aligned.apk
 echo "Built out/tvhome.apk"

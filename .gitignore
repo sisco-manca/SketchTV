@@ -16,3 +16,7 @@ backup*/
 .DS_Store
 .idea/
 __pycache__/
+
+.local/
+.claude/settings.local.json
+CLAUDE.local.md

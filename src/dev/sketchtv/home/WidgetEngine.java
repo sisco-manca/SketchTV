@@ -51,6 +51,19 @@ final class WidgetEngine {
             }catch(Exception e){states.put(p.id(),new State(p,old.content,old.fetched,true));}
         }
     }
+    /** No periodic polling: return the exact next deadline across enabled providers. */
+    long nextRefreshDelay(long now){
+        long delay=Long.MAX_VALUE;
+        for(WidgetProvider p:providers){
+            if(!p.enabled())continue;
+            State s=states.get(p.id());Long last=attempts.get(p.id());
+            long due=s.content==null||s.error?now:s.fetched+p.intervalMillis();
+            if(last!=null&&now>=last)due=Math.max(due,last+(s.error?60000L:p.intervalMillis()));
+            if(s.fetched>now||last!=null&&last>now)due=now;
+            delay=Math.min(delay,Math.max(0,due-now));
+        }
+        return delay;
+    }
     Map<String,State> snapshot(){return Collections.unmodifiableMap(new LinkedHashMap<>(states));}
     private String key(WidgetProvider p)throws Exception{
         MessageDigest hash=MessageDigest.getInstance("SHA-256");

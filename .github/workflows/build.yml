@@ -2,9 +2,12 @@ name: Build and checks
 on: [push, pull_request]
 permissions:
   contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -15,12 +18,11 @@ jobs:
         with:
           python-version: '3.12'
       - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+          log-accepted-android-sdk-licenses: false
       - run: sdkmanager "platforms;android-34" "build-tools;34.0.0"
-      - run: python3 tests/test_config.py
-      - run: python3 tests/check_layout.py
-      - run: python3 tests/check_privacy.py
-      - run: sh tests/test_network.sh
-      - run: sh tests/test_widgets.sh
+      - run: python3 tools/check.py
       - name: Get JVM test-only JSON dependency
         run: |
           curl -fsSL https://repo.maven.apache.org/maven2/org/json/json/20240303/json-20240303.jar -o "$RUNNER_TEMP/json.jar"

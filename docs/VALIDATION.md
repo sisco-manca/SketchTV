@@ -3,11 +3,7 @@
 ## Controlli locali
 
 ```sh
-python3 tests/test_config.py
-python3 tests/check_layout.py
-python3 tests/check_privacy.py
-sh tests/test_network.sh
-sh tests/test_widgets.sh
+python3 tools/check.py
 sh build.sh
 ```
 
@@ -39,3 +35,5 @@ La compilazione e l'anteprima non provano l'avvio su ogni firmware. Questa build
 - Prima di attivare Accessibilità verificare Home originale e ripristino; poi verificare il ritorno da app, sorgenti e standby. Una riconnessione del servizio non deve interrompere un video.
 - Misurare ripetutamente lo stesso percorso a parità di condizioni: distinguere cache fredda/calda, ripresa/avvio e standby/riavvio; riportare mediana e intervallo dei tempi. Usare `adb shell dumpsys gfxinfo dev.sketchtv.home` e `adb shell dumpsys meminfo dev.sketchtv.home` come supporto. MemFree da solo non dimostra fluidità.
 - Riavviare dopo una decisione esplicita, verificare l'avvio normale e infine spegnere il debugging.
+
+I test di `tools/device.py` usano soltanto ADB simulato: controllano consenso separato, registro prima della scrittura, valori null, crash recovery, drift, dispositivo errato (anche due unità dello stesso firmware allo stesso endpoint), identificativo assente, dati privati e ripristino idempotente. Non si apre una connessione reale eseguendo il checker.

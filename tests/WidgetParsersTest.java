@@ -16,6 +16,8 @@ public class WidgetParsersTest {
         check(BuiltinParsers.parse(4,read("standings"))[0].equals("8"),"explicit rank instead of points or row index");
         for(int i=0;i<5;i++)fails(i,"{}");
         JSONObject broken=new JSONObject(read("matches"));broken.getJSONArray("events").getJSONObject(0).getJSONArray("competitions").getJSONObject(0).getJSONArray("competitors").getJSONObject(0).put("score","unknown");fails(3,broken.toString());
+        JSONObject invalidWeather=new JSONObject(read("weather"));invalidWeather.getJSONObject("current").put("temperature_2m","NaN");fails(0,invalidWeather.toString());
+        invalidWeather=new JSONObject(read("weather"));invalidWeather.getJSONObject("daily").put("precipitation_probability_max",new JSONArray().put(150));fails(0,invalidWeather.toString());
         List<WidgetProvider> providers=BuiltinWidgets.create();check(providers.size()==3,"built-in registry");
         check(providers.get(0).parse(Arrays.asList(read("weather"))).lines.get(0).equals("18°"),"provider builds weather content");
         check(providers.get(1).parse(Arrays.asList(read("race"),read("constructors"))).lines.get(3).equals("Costruttori · P3"),"provider builds F1 content");
