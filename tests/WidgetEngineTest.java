@@ -44,6 +44,8 @@ public class WidgetEngineTest {
         try{new WidgetEngine(Arrays.asList(p,p),f,store);throw new AssertionError("duplicate IDs");}catch(IllegalArgumentException good){checks++;}
         p.url="http://example.invalid/";try{new WidgetEngine(Arrays.asList(p),f,store);throw new AssertionError("insecure source");}catch(IllegalArgumentException good){checks++;}
         WidgetEngine idle=engine(Arrays.asList(disabled),new Fetch(),new Store());check(idle.nextRefreshDelay(now)==Long.MAX_VALUE,"no wakeups for disabled widgets");
+        try{new WidgetProvider.Content("Title",new String(new char[241]).replace('\0','x'));throw new AssertionError("Unbounded remote row accepted");}catch(IllegalArgumentException good){checks++;}
+        try{new WidgetProvider.Content("Title","line\nbreak");throw new AssertionError("Multiline row accepted");}catch(IllegalArgumentException good){checks++;}
         System.out.println("PASS: "+checks+" widget cache, scheduling, attribution and failure checks");
     }
 }

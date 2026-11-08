@@ -20,3 +20,5 @@ Ogni riquadro mostra il nome della fonte. Selezionandolo si vedono URL, attribuz
 Prima di aggiungere una fonte controlla condizioni, disponibilità e limiti. Non inserire chiavi segrete nell'APK. Aggiungi fixture inventate per risposta valida, dati assenti, formati modificati ed errori; verifica che gli errori conservino l'ultimo contenuto attendibile.
 
 Le scadenze vengono calcolate dal motore: nessun polling fisso di 30 secondi e nessun timer se tutti i provider sono disabilitati.
+
+Content accetta un titolo di massimo 100 caratteri e da una a cinque righe di massimo 240 caratteri, senza controlli o ritorni a capo. Contenuti più lunghi vengono rifiutati prima del rendering, preservando i dati precedenti: anche la cache del fitting resta così limitata su input remoti.

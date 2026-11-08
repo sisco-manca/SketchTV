@@ -23,6 +23,7 @@ La CLI dispositivo non fa parte dell'APK; nessuna ottimizzazione del sistema avv
 - Worker stato: enumerazione ingressi, risoluzione Intent e stato rete.
 - Worker immagini: asset locali dopo la creazione della UI, con campionamento e budget totale decodificato di 4 MiB. In carenza di spazio compare l'etichetta; il worker termina dopo la coda iniziale.
 - Catalogo app: caricamento asincrono, pagina di otto elementi, cache icone da 1 MiB. La UI si conserva quando i dati non cambiano; gli aggiornamenti arrivati mentre è nascosta restano da renderizzare.
+- Contenuto remoto: titolo limitato a 100 caratteri, massimo cinque righe da 240 caratteri, senza controlli o multilinea; i dati eccedenti sono rifiutati prima della UI.
 - Testo: fitting binario e cache LRU limitata a 192 risultati, ellissi rispettosa dei code point Unicode. Citazioni e geometrie vettoriali si preparano fuori dal percorso di disegno ripetuto.
 
 I budget coprono bitmap/caches specifiche, non la memoria totale del processo. Android, font, cache grafiche e provider consumano altre risorse. Servono misure PSS e frame-time sul dispositivo per quantificare i benefici.

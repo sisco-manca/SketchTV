@@ -6,6 +6,10 @@ root=Path(__file__).resolve().parents[1]
 files=subprocess.check_output(['git','ls-files','--cached','--others','--exclude-standard','-z'],cwd=root).decode().split('\0')
 for name in filter(None,files):
     p=root/name
+    parts=Path(name).parts
+    assert not any(part in ('.local','state','baseline') or part.startswith('backup') for part in parts),name
+    assert name not in ('CLAUDE.local.md','.claude/settings.local.json'),name
+    assert not p.name.startswith('.env'),name
     assert p.suffix not in ('.apk','.aab','.jks','.keystore','.log','.pem','.key'), name
     if not p.is_file() or p.name=='check_privacy.py' or p.suffix in ('.ttf','.png'):continue
     text=p.read_text()
