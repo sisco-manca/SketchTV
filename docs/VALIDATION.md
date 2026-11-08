@@ -36,4 +36,4 @@ La compilazione e l'anteprima non provano l'avvio su ogni firmware. Questa build
 - Misurare ripetutamente lo stesso percorso a parità di condizioni: distinguere cache fredda/calda, ripresa/avvio e standby/riavvio; riportare mediana e intervallo dei tempi. Usare `adb shell dumpsys gfxinfo dev.sketchtv.home` e `adb shell dumpsys meminfo dev.sketchtv.home` come supporto. MemFree da solo non dimostra fluidità.
 - Riavviare dopo una decisione esplicita, verificare l'avvio normale e infine spegnere il debugging.
 
-I test di `tools/device.py` usano soltanto ADB simulato: controllano consenso separato, registro prima della scrittura, valori null, crash recovery, drift, dispositivo errato, dati privati e ripristino idempotente. Non si apre una connessione reale eseguendo il checker.
+I test di `tools/device.py` usano soltanto ADB simulato: controllano consenso separato, registro prima della scrittura, valori null, crash recovery, drift, dispositivo errato (anche due unità dello stesso firmware allo stesso endpoint), identificativo assente, dati privati e ripristino idempotente. Non si apre una connessione reale eseguendo il checker.

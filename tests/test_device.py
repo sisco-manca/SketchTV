@@ -118,6 +118,12 @@ class DeviceTest(unittest.TestCase):
             adb=device.Adb('synthetic-serial');adb.shell('getprop','a;b')
             args=run.call_args.args[0];self.assertEqual(args[:5],['adb','-s','synthetic-serial','shell','-n']);self.assertEqual(args[-1],"getprop 'a;b'")
             self.assertIs(run.call_args.kwargs['stdin'],device.subprocess.DEVNULL)
+    def test_same_endpoint_firmware_different_hardware(self):
+        with patch.object(device.Adb,'run',return_value='device'), patch.object(device.Adb,'shell',side_effect=['same-firmware','synthetic-unit-a','same-firmware','synthetic-unit-b']):
+            adb=device.Adb('same-endpoint');self.assertNotEqual(adb.identity(),adb.identity())
+    def test_identity_fails_closed_without_unique_value(self):
+        with patch.object(device.Adb,'run',return_value='device'), patch.object(device.Adb,'shell',side_effect=['firmware','unknown','null']):
+            with self.assertRaises(device.DeviceError):device.Adb('synthetic').identity()
     def test_null_undo_uses_settings_delete(self):
         with patch.object(device.Adb,'shell',return_value='') as shell:
             device.Adb('synthetic').put('global:animator_duration_scale',None)

@@ -36,7 +36,7 @@ python3 tools/device.py --serial SERIAL apply
 
 Chiede `SI` separatamente per ogni intervento; EOF o qualsiasi altra risposta rifiutano quella modifica. Non usare pipe o automazioni per confermare al posto della persona. Prima della scrittura salva e sincronizza il registro, poi verifica il risultato. Un valore originariamente assente è conservato come null e viene eliminato correttamente al ripristino.
 
-Il piano è legato a seriale ADB e fingerprint del firmware. Cambiare indirizzo, collegamento o firmware richiede una nuova valutazione: il tool si ferma, non assume che sia lo stesso dispositivo. Se lo stato è cambiato dopo l'ispezione si ferma; un registro esistente non viene sovrascritto. Dopo un'interruzione usa il registro per il ripristino prima di un nuovo piano.
+Il piano è legato a seriale ADB, identificativo univoco del dispositivo (seriale hardware oppure Android ID) e fingerprint del firmware, conservati soltanto sotto forma di hash. Se manca un identificativo univoco il tool si ferma. Cambiare indirizzo, collegamento o firmware richiede una nuova valutazione: il tool si ferma, non assume che sia lo stesso dispositivo. Se lo stato è cambiato dopo l'ispezione si ferma; un registro esistente non viene sovrascritto. Dopo un'interruzione usa il registro per il ripristino prima di un nuovo piano.
 
 ## 4. Confronto e ripristino
 

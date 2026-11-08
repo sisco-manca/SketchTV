@@ -76,7 +76,11 @@ class Adb:
         if self.run('get-state')!='device':raise DeviceError('Dispositivo assente o non autorizzato')
         fingerprint=self.shell('getprop','ro.build.fingerprint')
         if not fingerprint:raise DeviceError('Impossibile identificare il dispositivo')
-        return hashlib.sha256((self.serial+'\0'+fingerprint).encode()).hexdigest()
+        unique=self.shell('getprop','ro.serialno')
+        if not unique or unique.lower() in ('unknown','null'):
+            unique=self.shell('settings','get','secure','android_id')
+            if not re.fullmatch(r'[a-fA-F0-9]{16}',unique):raise DeviceError('Identificativo univoco non disponibile: nessuna modifica consentita')
+        return hashlib.sha256((self.serial+'\0'+unique+'\0'+fingerprint).encode()).hexdigest()
     def get(self,key):
         namespace,name=key.split(':');value=self.shell('settings','get',namespace,name)
         return None if value=='null' else value
