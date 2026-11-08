@@ -18,6 +18,7 @@ final class WidgetRepository {
     private final Listener listener;
     private volatile boolean active=false,closed=false;
     private boolean busy=true;
+    private final Runnable due=()->refresh(false);
     private Map<String,WidgetEngine.State> published=Collections.emptyMap();
     WidgetRepository(Context context,List<WidgetProvider> providers,Listener listener){
         this.listener=listener;SharedPreferences prefs=context.getSharedPreferences("widget-cache-v2",0);
@@ -28,8 +29,8 @@ final class WidgetRepository {
         worker.execute(()->{engine.restore();Map<String,WidgetEngine.State> state=engine.snapshot();ui.post(()->{busy=false;if(closed)return;publish(state);if(active)refresh(false);});});
     }
     private void publish(Map<String,WidgetEngine.State> state){if(!state.equals(published)){published=state;listener.changed(state);}}
-    void setActive(boolean active){this.active=active;if(active)refresh(false);}
-    void refresh(boolean force){if(closed||!active||busy)return;busy=true;worker.execute(()->{engine.refresh(System.currentTimeMillis(),force,()->active&&!closed);Map<String,WidgetEngine.State> state=engine.snapshot();ui.post(()->{busy=false;if(!closed)publish(state);});});}
+    void setActive(boolean active){this.active=active;ui.removeCallbacks(due);if(active)refresh(false);}
+    void refresh(boolean force){if(closed||!active||busy)return;busy=true;worker.execute(()->{engine.refresh(System.currentTimeMillis(),force,()->active&&!closed);Map<String,WidgetEngine.State> state=engine.snapshot();long delay=engine.nextRefreshDelay(System.currentTimeMillis());ui.post(()->{busy=false;if(closed)return;publish(state);ui.removeCallbacks(due);if(active&&delay!=Long.MAX_VALUE)ui.postDelayed(due,Math.max(1000L,delay));});});}
     void close(){closed=true;active=false;worker.shutdownNow();ui.removeCallbacksAndMessages(null);}
     private static String read(String address)throws Exception{
         HttpsURLConnection c=(HttpsURLConnection)new URL(address).openConnection();c.setConnectTimeout(5000);c.setReadTimeout(5000);c.setInstanceFollowRedirects(false);c.setRequestProperty("Accept","application/json");c.setRequestProperty("User-Agent","SketchTV/0.2");

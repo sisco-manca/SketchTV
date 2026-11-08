@@ -15,10 +15,15 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header('Content-Type',content_type)
         self.send_header('Content-Length',str(len(payload)))
         self.send_header('Cache-Control','no-store')
+        self.send_header('Referrer-Policy','no-referrer')
+        self.send_header('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'")
         self.send_header('X-Content-Type-Options','nosniff')
         self.end_headers()
         self.wfile.write(payload)
+    def valid_host(self):
+        return self.headers.get('Host')==f'127.0.0.1:{self.server.server_port}'
     def do_GET(self):
+        if not self.valid_host():return self.send_error(403)
         path=unquote(urlsplit(self.path).path)
         allowed={'/':'preview/index.html','/index.html':'preview/index.html','/preview.js':'preview/preview.js','/preview.css':'preview/preview.css','/project.json':'project.json'}
         if path in allowed:
@@ -32,6 +37,7 @@ class Handler(BaseHTTPRequestHandler):
         types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json; charset=utf-8','.ttf':'font/ttf','.png':'image/png'}
         self.respond(200,target.read_bytes(),types[target.suffix])
     def do_POST(self):
+        if not self.valid_host():return self.send_error(403)
         if self.path!='/validate':return self.send_error(404)
         origin=self.headers.get('Origin')
         if origin!=f'http://127.0.0.1:{self.server.server_port}':return self.send_error(403)

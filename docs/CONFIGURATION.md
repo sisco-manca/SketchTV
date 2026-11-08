@@ -24,7 +24,7 @@ Ogni elemento di `tiles` contiene:
 | id | Nome unico, lettere minuscole, numeri, trattino o underscore |
 | kind | clock, widget, app, source o control |
 | label | Etichetta visibile/accessibile |
-| rect | `[x, y, larghezza, altezza]`, minimo 100×70 |
+| rect | `[x, y, larghezza, altezza]`, minimi per contenuto: clock 400×240, widget 280×260, app 120×90, source 180×80, control 100×70 |
 | action | Azione da eseguire quando si preme OK |
 | color | Colore di sfondo opzionale |
 | asset | Nome PNG opzionale presente in assets/, senza percorsi |
@@ -44,3 +44,5 @@ Le configurazioni `weather`, `f1` e `football` includono `enabled` e `refreshMin
 Non inserire nome e ID nello stesso campo: gli ID sono valori pubblicati dai provider, non dedotti da un nome. Configurare gli ID prima di abilitare un widget. La cache è separata per provider ed endpoint, quindi cambiare località o squadra non riutilizza risposte della precedente configurazione.
 
 Il JSON viene incorporato nella logica generata dell'APK: non è una posizione sicura per segreti. Il file iniziale non contiene preferenze personali. Non caricare in Git configurazioni contenenti dati che non desideri condividere.
+
+La build include solo gli asset referenziati e font/licenza: PNG massimo 4 MiB e 8192 pixel per lato, totale selezionato 12 MiB. La Home impone inoltre un budget di 4 MiB per i bitmap decodificati. Se un’immagine manca o supera il budget disponibile viene mostrata l’etichetta.

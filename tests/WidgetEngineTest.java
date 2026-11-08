@@ -25,11 +25,11 @@ public class WidgetEngineTest {
         long now=10000000L;Provider p=new Provider("one"),disabled=new Provider("off"),slow=new Provider("slow");disabled.enabled=false;slow.interval=1800000;
         Fetch f=new Fetch();Store store=new Store();WidgetEngine e=engine(Arrays.asList(p,disabled,slow),f,store);
         check(e.snapshot().get("one").content==null,"starts empty");check(e.snapshot().get("off").status(now).equals("Da configurare"),"disabled label");
-        e.refresh(now,false,()->true);check(f.calls==2,"only enabled providers fetch");check(e.snapshot().get("one").fetched==now,"download timestamp");
+        e.refresh(now,false,()->true);check(f.calls==2,"only enabled providers fetch");check(e.nextRefreshDelay(now)==600000,"next provider deadline");check(e.snapshot().get("one").fetched==now,"download timestamp");
         e.refresh(now+1000,false,()->true);check(f.calls==2,"does not refetch while fresh");
         e.refresh(now+600000,false,()->true);check(f.calls==3,"independent intervals");
         f.fail=true;e.refresh(now+1200000,false,()->true);WidgetEngine.State old=e.snapshot().get("one");check(old.error&&old.content!=null,"offline retains valid data");check(old.fetched==now+600000,"failure never changes timestamp");check(old.stale(now+1200000),"offline marked saved");
-        int calls=f.calls;e.refresh(now+1200001,false,()->true);check(f.calls==calls,"failed source retry throttled");
+        int calls=f.calls;e.refresh(now+1200001,false,()->true);check(f.calls==calls,"failed source retry throttled");check(e.nextRefreshDelay(now+1200001)==59999,"retry deadline");
         f.fail=false;f.value="recovered";e.refresh(now+1260000,false,()->true);check(!e.snapshot().get("one").error,"recovers after retry interval");
         f.value="bad";e.refresh(now+1270000,true,()->true);check(e.snapshot().get("one").content.lines.get(0).equals("recovered"),"parser errors retain good content");
         calls=f.calls;e.refresh(now+1270001,true,()->true);check(f.calls==calls,"manual refresh debounced");
@@ -43,6 +43,7 @@ public class WidgetEngineTest {
         try{e.snapshot().clear();throw new AssertionError("mutable snapshot");}catch(UnsupportedOperationException good){checks++;}
         try{new WidgetEngine(Arrays.asList(p,p),f,store);throw new AssertionError("duplicate IDs");}catch(IllegalArgumentException good){checks++;}
         p.url="http://example.invalid/";try{new WidgetEngine(Arrays.asList(p),f,store);throw new AssertionError("insecure source");}catch(IllegalArgumentException good){checks++;}
+        WidgetEngine idle=engine(Arrays.asList(disabled),new Fetch(),new Store());check(idle.nextRefreshDelay(now)==Long.MAX_VALUE,"no wakeups for disabled widgets");
         System.out.println("PASS: "+checks+" widget cache, scheduling, attribution and failure checks");
     }
 }

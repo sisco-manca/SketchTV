@@ -4,6 +4,8 @@ import argparse
 import json
 import math
 import re
+import shutil
+import struct
 from pathlib import Path
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
@@ -25,6 +27,7 @@ def validate(c):
     margin = canvas["safeMargin"]
     require(number(margin) and 8 <= margin <= 120, "safeMargin must be 8..120")
     theme = c["theme"]
+    require(set(theme)=={"background","backgroundEnd","text","muted","card","cardText","accent","radius","textScale"}, "Unknown or missing theme property")
     for k in ("background", "backgroundEnd", "text", "muted", "card", "cardText", "accent"):
         require(bool(re.fullmatch(r"#[0-9a-fA-F]{6}", theme[k])), "Invalid color: " + k)
     require(number(theme["radius"]) and 0 <= theme["radius"] <= 60, "radius must be 0..60")
@@ -60,11 +63,14 @@ def validate(c):
         r = t["rect"]
         require(type(r) is list and len(r) == 4 and all(number(x) for x in r), "rect is [x,y,width,height]")
         x,y,w,h = r
+        min_width,min_height={"clock":(400,240),"widget":(280,260),"app":(120,90),"source":(180,80),"control":(100,70)}[t["kind"]]
+        require(w>=min_width and h>=min_height,"Tile too small for its content: "+t["id"])
         require(w >= 100 and h >= 70 and x >= margin and y >= margin and x+w <= 1920-margin and y+h <= 1080-margin, "Tile outside safe area or too small: " + t["id"])
         if "color" in t:
             require(bool(re.fullmatch(r"#[0-9a-fA-F]{6}", t["color"])), "Invalid tile color")
         action = t["action"]
         require(type(action) is str and (action in SIMPLE_ACTIONS or action.startswith("widget:") and action[7:] in widgets or bool(re.fullmatch(r"app:(?:[a-zA-Z][a-zA-Z0-9_]*(?:\.[a-zA-Z][a-zA-Z0-9_]*)+)?", action))), "Invalid tile action: " + str(action))
+        require(t["kind"]!="clock" or action=="widget:weather", "The clock tile needs widget:weather")
         require((t["kind"] not in ("clock", "widget")) or action.startswith("widget:"), "Clock/widget tiles need a widget action")
         if "asset" in t:
             require(type(t["asset"]) is str and bool(re.fullmatch(r"[a-zA-Z0-9_-]+\.png", t["asset"])), "Assets must be local PNG basenames")
@@ -130,15 +136,45 @@ final class LayoutSpec {
     s+=' };\n static final int[][] NEIGHBORS={'+','.join('{'+','.join(map(str,r))+'}' for r in neighbors(c['tiles']))+'};\n}\n'
     (output/'LayoutSpec.java').write_text(s)
 
+def collect_assets(c, assets=ROOT/'assets'):
+    names={'Poppins-Regular.ttf','Poppins-Bold.ttf','OFL-Poppins.txt'}
+    names.update(t['asset'] for t in c['tiles'] if t.get('asset'))
+    files=[];total=0
+    for name in sorted(names):
+        path=assets/name
+        if path.is_symlink():raise ValueError('Symlink assets are not packaged: '+name)
+        if not path.is_file():
+            if name.endswith('.png'):continue # Optional image: Android/browser both show a label instead.
+            raise ValueError('Missing required font/license: '+name)
+        size=path.stat().st_size
+        require(size<=4*1024*1024, 'Asset exceeds 4 MiB: '+name)
+        total+=size
+        if name.endswith('.png'):
+            with path.open('rb') as stream:header=stream.read(24)
+            require(len(header)==24 and header[:8]==b'\x89PNG\r\n\x1a\n' and header[12:16]==b'IHDR', 'Invalid PNG header: '+name)
+            width,height=struct.unpack('>II',header[16:24])
+            require(0<width<=8192 and 0<height<=8192,'PNG dimensions too large: '+name)
+        files.append(path)
+    require(total<=12*1024*1024,'Selected assets exceed the 12 MiB package budget')
+    return files
+
+def stage_assets(files, output):
+    output.mkdir(parents=True,exist_ok=True)
+    for path in files:shutil.copyfile(path,output/path.name)
+
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('project',nargs='?',default=str(ROOT/'project.json'))
     parser.add_argument('--output',default=str(ROOT/'out/gen/dev/sketchtv/home'))
     parser.add_argument('--check',action='store_true')
+    parser.add_argument('--assets-output',default=str(ROOT/'out/assets'))
     args=parser.parse_args()
     try:
         c=validate(json.loads(Path(args.project).read_text()))
-        if not args.check: generate(c,Path(args.output))
+        files=collect_assets(c)
+        if not args.check:
+            generate(c,Path(args.output))
+            stage_assets(files,Path(args.assets_output))
         print('Project valid: '+str(len(c['tiles']))+' tiles, explicit focus links, widget settings checked')
     except (ValueError,KeyError,TypeError,OSError) as e:
         parser.exit(1,'Configuration error: '+str(e)+'\n')

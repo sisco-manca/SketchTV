@@ -57,6 +57,8 @@ def main():
             # Only whitelisted preview files can be read; no keystores or source tree.
             for path in ('/key.jks','/.git/config','/src/dev/sketchtv/home/MainActivity.java','/assets/../key.jks'):
                 response=page.request.get(base+path);assert response.status==404,(path,response.status)
+            assert page.request.get(base+'/project.json',headers={'Host':'example.invalid'}).status==403
+            assert page.request.get(base+'/').headers.get('content-security-policy')
             denied=page.request.post(base+'/validate',data='{}',headers={'Origin':'https://example.invalid'});assert denied.status==403
             browser.close()
             print('PASS: browser rendering, remote navigation, editing/export, invalid config, text escaping, responsive viewport, privacy and local-only requests')

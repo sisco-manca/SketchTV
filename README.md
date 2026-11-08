@@ -56,6 +56,14 @@ Ogni riquadro mostra la fonte; i dettagli mostrano endpoint, condizioni dichiara
 
 Nessuna conversione automatica immagine → interfaccia: lo sketch è un riferimento sovrapponibile e il layout si definisce nello studio. I tipi di widget disponibili si configurano nel JSON; nuovi tipi richiedono un adattatore in codice.
 
+## Ottimizzazione del dispositivo e Claude Code
+
+La CLI opzionale offre **ispezione → piano → conferma di ogni modifica → confronto → undo**. I soli interventi supportati riguardano animazioni e sospensione; nessuna app viene disabilitata e lo screensaver resta invariato. Snapshot e registri sono privati, esclusi da Git. [Guida dispositivo](docs/DEVICE.md).
+
+Per Claude Code sono inclusi `CLAUDE.md`, istruzioni condivise `AGENTS.md` e le skill manuali `/sketch-tv` e `/device-audit`. Nessun hook o consenso automatico. [Guida Claude Code](docs/CLAUDE_CODE.md).
+
+[Architettura e budget di memoria](docs/ARCHITECTURE.md) · [Revisione tecnica e limiti](docs/AUDIT.md)
+
 ## Compilazione
 
 Servono Python 3.9+, JDK 17 e Android SDK con `platforms;android-34` e `build-tools;34.0.0`.
@@ -79,11 +87,7 @@ Rendering conservato, bitmap limitati, rete/cache/ingressi fuori dal thread graf
 La fluidità è un obiettivo da misurare. Non promettiamo maggiore RAM libera né compatibilità universale: avvio, sorgenti e Home dipendono anche dal firmware. L'anteprima browser non sostituisce un collaudo Android.
 
 ```sh
-python3 tests/test_config.py
-python3 tests/check_layout.py
-python3 tests/check_privacy.py
-sh tests/test_network.sh
-sh tests/test_widgets.sh
+python3 tools/check.py
 ```
 
 [Test dei parser, browser e checklist dispositivo](docs/VALIDATION.md). La CI compila e verifica la firma, la configurazione, cache/errori, parser con dati inventati e lo studio nel browser.

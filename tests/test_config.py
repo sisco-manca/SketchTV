@@ -17,6 +17,14 @@ class ConfigTest(unittest.TestCase):
     def test_default(self):
         config.validate(self.c)
         self.assertTrue(all(not w['enabled'] for w in self.c['widgets'].values()))
+    def test_widget_height(self):self.rejects(lambda c:c["tiles"][1].update(rect=[886,174,432,100]))
+    def test_asset_staging_excludes_unreferenced_files(self):
+        with tempfile.TemporaryDirectory() as d:
+            assets=Path(d)/"assets";assets.mkdir();output=Path(d)/"staged"
+            for name in ("Poppins-Regular.ttf","Poppins-Bold.ttf","OFL-Poppins.txt"):(assets/name).write_bytes(b"test")
+            (assets/"private-note.txt").write_text("not for APK")
+            config.stage_assets(config.collect_assets(self.c,assets),output)
+            self.assertFalse((output/"private-note.txt").exists());self.assertEqual(len(list(output.iterdir())),3)
     def test_overlap(self):self.rejects(lambda c:c['tiles'][1].update(rect=c['tiles'][2]['rect']))
     def test_focus_gap(self):self.rejects(lambda c:c['tiles'][4].update(rect=[456,617,347,204]))
     def test_out_of_bounds(self):self.rejects(lambda c:c['tiles'][0].update(rect=[0,0,2000,1080]))
@@ -31,6 +39,8 @@ class ConfigTest(unittest.TestCase):
     def test_timezone(self):self.rejects(lambda c:c['clock'].update(timeZone='invalid/zone'))
     def test_bad_color(self):self.rejects(lambda c:c['theme'].update(accent='red'))
     def test_scale(self):self.rejects(lambda c:c['theme'].update(textScale=10))
+    def test_unknown_theme(self):self.rejects(lambda c:c["theme"].update(unknown="invalid"))
+    def test_clock_requires_weather(self):self.rejects(lambda c:c["tiles"][0].update(action="widget:f1"))
     def test_version_boolean(self):self.rejects(lambda c:c.update(version=True))
     def test_neighbors(self):
         n=config.neighbors(self.c['tiles']);self.assertEqual(n[3][2],4);self.assertEqual(n[4][0],3)

@@ -49,13 +49,12 @@ final class LineIcon extends Drawable {
         paint.setStrokeCap(Paint.Cap.ROUND);
         paint.setStrokeJoin(Paint.Join.ROUND);
         paint.setColor(0xEBFFFFFF);
+        buildPath();
     }
 
-    @Override
-    public void draw(Canvas c) {
+    private void buildPath() {
         if (ops == null) return;
-        float s = getBounds().width() / 240f; // ops are in tenths of the 24-unit grid
-        paint.setStrokeWidth(16 * s);
+        float s = 1;
         path.reset();
         for (int i = 0; i < ops.length; ) {
             switch (ops[i]) {
@@ -70,8 +69,14 @@ final class LineIcon extends Drawable {
                     i += 6;
             }
         }
+    }
+
+    @Override public void draw(Canvas c) {
+        float scale=getBounds().width()/240f;
+        paint.setStrokeWidth(16);
         c.save();
         c.translate(getBounds().left, getBounds().top);
+        c.scale(scale,scale);
         c.drawPath(path, paint);
         c.restore();
     }

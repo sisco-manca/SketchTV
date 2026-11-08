@@ -23,10 +23,11 @@ final class AppCatalog {
         }
         // An enabled user app without a launcher can still be reached through its app information.
         for(ApplicationInfo a:pm.getInstalledApplications(0))if(a.enabled&&(a.flags&ApplicationInfo.FLAG_SYSTEM)==0&&!excluded(a.packageName)&&!found.containsKey(a.packageName))found.put(a.packageName,new Entry(a.packageName,label(pm,a),null));
-        List<Entry> all=new ArrayList<>(found.values());Collator collator=Collator.getInstance(Locale.ITALY);
+        List<Entry> all=new ArrayList<>(found.values());Collator collator=Collator.getInstance(Locale.forLanguageTag(Config.LOCALE));
         Collections.sort(all,(a,b)->{int pa=priority(a.pkg),pb=priority(b.pkg);if(pa!=pb)return pa-pb;int n=collator.compare(a.label,b.label);return n!=0?n:a.pkg.compareTo(b.pkg);});
         return all;
     }
+    static long fingerprint(List<Entry> entries){long h=1;for(Entry e:entries){h=31*h+e.pkg.hashCode();h=31*h+e.label.hashCode();h=31*h+(e.intent==null?0:e.intent.toUri(0).hashCode());}return h;}
     private static int priority(String pkg){for(int i=0;i<PINNED.length;i++)if(PINNED[i].equals(pkg))return i;return PINNED.length;}
     private static String label(PackageManager pm,ApplicationInfo app){try{CharSequence s=pm.getApplicationLabel(app);return s==null?app.packageName:s.toString();}catch(Exception e){return app.packageName;}}
 }

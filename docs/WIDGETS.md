@@ -18,3 +18,5 @@ Gli aggiornamenti si interrompono fra le richieste quando la Home non è visibil
 Ogni riquadro mostra il nome della fonte. Selezionandolo si vedono URL, attribuzione, timestamp e stato. Il timestamp è di download, non l'ora ufficiale di pubblicazione; i dettagli ricordano questo limite. La vecchia cache viene segnalata dopo un errore o dopo il maggiore fra un'ora e due intervalli di aggiornamento.
 
 Prima di aggiungere una fonte controlla condizioni, disponibilità e limiti. Non inserire chiavi segrete nell'APK. Aggiungi fixture inventate per risposta valida, dati assenti, formati modificati ed errori; verifica che gli errori conservino l'ultimo contenuto attendibile.
+
+Le scadenze vengono calcolate dal motore: nessun polling fisso di 30 secondi e nessun timer se tutti i provider sono disabilitati.

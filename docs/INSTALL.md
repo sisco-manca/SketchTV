@@ -14,3 +14,5 @@ Non serve collegare un televisore per compilare. Provare prima su un dispositivo
 Disattiva soltanto «Tasto Home · Sketch TV» da Accessibilità, scegli la Home originale nelle impostazioni e verifica il tasto Home. Se desideri rimuovere Sketch TV, disinstallala dalla normale schermata app dopo questi passaggi. Gli aggiornamenti richiedono la stessa firma e un versionCode maggiore; una chiave diversa non può aggiornare un'installazione esistente.
 
 Gli script non disabilitano né eliminano altre app. Non alterare Google Play services, Play Store, impostazioni, System UI, setup, tastiera, Bluetooth, framework TV, ingressi, launcher di sistema o componenti sconosciuti. Nessuno script di pulizia del dispositivo di origine è incluso.
+
+L’ottimizzazione opzionale del dispositivo è separata dall’installazione: vedi DEVICE.md. Non comporta alcuna disabilitazione di pacchetti.
